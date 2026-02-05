@@ -13,6 +13,97 @@ The back-end is built using Spring Boot as a framework, Spring Data for data man
 The style used to build this project is Domain-Driven Design. The project is split into packages, and each package represents a domain, usually, a table behind this domain.
 
 This structure is used in both the front-end and back-end components. The back-end focuses on business and data management, while the front-end focuses on representing and manipulating the data.
+## The back-end general purposes classes:
+
+there are a few classes that represent the backbone of a few useful functionality that being used through the application, such as:
+#### 1. AuditingMetadata 
+1. to provide basic data to all data holder objects
+```java
+package sa.elm.iam2.portal.backend.framework.jpa.model;
+
+import jakarta.persistence.MappedSuperclass;
+import lombok.Data;
+
+import java.io.Serializable;
+
+@MappedSuperclass
+@Data
+public abstract class AuditingMetadata implements Serializable {
+
+    private String createdByUsername;
+    private String lastModifiedByUsername;
+    private boolean enabled;
+
+}
+
+```
+#### 2. AuditingMetadata
+1. extends AuditingMetadata to get its properties
+2. adding needed properties for every entity
+```java
+package sa.elm.iam2.portal.backend.framework.jpa.model;
+
+import jakarta.persistence.MappedSuperclass;
+import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.Where;
+
+import java.time.LocalDateTime;
+
+@MappedSuperclass
+@Where(clause = "deleted = 'false'") 
+@Data
+public abstract class EntityMeta extends AuditingMetadata {
+
+    private String deletedByUsername;
+    @CreationTimestamp
+    private LocalDateTime createdDate;
+    @UpdateTimestamp
+    private LocalDateTime lastModifiedDate;
+    private LocalDateTime deletedDateTime;
+    private boolean deleted;
+
+}
+```
+#### 3. DtoMeta
+1. extends AuditingMetadata to get its properties
+2. adding needed properties for every dto
+```java
+package sa.elm.iam2.portal.backend.framework.jpa.model;
+
+import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import jakarta.persistence.MappedSuperclass;
+import java.time.LocalDateTime;
+
+@Data
+@MappedSuperclass
+public abstract class DtoMeta extends AuditingMetadata{
+
+    @CreationTimestamp
+    private LocalDateTime createdDate;
+    @UpdateTimestamp
+    private LocalDateTime lastModifiedDate;
+
+}
+```
+### 4. ModelMeta
+1. extends AuditingMetadata to get its properties
+2. adding needed properties for every Model
+```java
+package sa.elm.iam2.portal.backend.framework.jpa.model;
+
+import jakarta.persistence.MappedSuperclass;
+
+@MappedSuperclass
+public abstract class ModelMeta extends AuditingMetadata{
+
+}
+```
+
 ## The back-end domain structure:
 
 each domain will have these classes as a root of behavior-based, such as:
@@ -444,3 +535,42 @@ public class CustomerProfileController {
 }
 ```
 
+#### 10. Liquibase script: 
+1. used for database object creation
+2. used for data manipulations
+3. to have consistance database across environments.
+```xml
+
+    <changeSet author="iam-app" id="1639924761809-12">
+        <createTable tableName="TBL_IAM_CUSTOMER_PROFILE">
+            <column computed="false" name="ID" type="bigint">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK__TBL_IAM___3214EC2725D3D199"/>
+            </column>
+            <column computed="false" name="LAST_MODIFIED_BY_USERNAME" type="nvarchar(255)"/>
+            <column computed="false" name="CREATED_BY_USERNAME" type="nvarchar(255)"/>
+            <column computed="false" name="CREATED_DATE" type="datetime2"/>
+            <column computed="false" name="DELETED" type="bit">
+                <constraints nullable="false"/>
+            </column>
+            <column computed="false" name="DELETED_BY_USERNAME" type="nvarchar(255)"/>
+            <column computed="false" name="DELETED_DATE_TIME" type="datetime2"/>
+            <column computed="false" name="ENABLED" type="bit">
+                <constraints nullable="false"/>
+            </column>
+            <column computed="false" name="LAST_MODIFIED_DATE" type="datetime2"/>
+            <column computed="false" name="PROFILE_NAME" type="nvarchar(255)"/>
+            <column computed="false" name="P_O_BOX" type="nvarchar(255)"/>
+            <column computed="false" name="P_O_CODE" type="nvarchar(255)"/>
+            <column computed="false" name="CITY" type="nvarchar(255)"/>
+            <column computed="false" name="COMMERCIAL_REGISTRATION_CODE" type="nvarchar(255)"/>
+            <column computed="false" name="COMMERCIAL_REGISTRATION_EXPIRY" type="datetime2"/>
+            <column computed="false" name="COMMERCIAL_REGISTRATION_ISSUE" type="datetime2"/>
+            <column computed="false" name="EMAIL" type="nvarchar(255)"/>
+            <column computed="false" name="FAX" type="nvarchar(255)"/>
+            <column computed="false" name="NAME_AR" type="nvarchar(255)"/>
+            <column computed="false" name="NAME_EN" type="nvarchar(255)"/>
+            <column computed="false" name="PHONE" type="nvarchar(255)"/>
+            <column computed="false" name="WEBSITE" type="nvarchar(255)"/>
+        </createTable>
+    </changeSet>
+```
